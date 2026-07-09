@@ -1,0 +1,26 @@
+{
+    "name": "牛奶抗生素检测",
+    "short_name": "抗生素检测",
+    "description": "牛奶中β-内酰胺类抗生素残留快速检测工具，通过比色试纸拍照识别抗生素种类和浓度。",
+    "start_url": ".",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#f5f7fa",
+    "theme_color": "#1a237e",
+    "lang": "zh-CN",
+    "categories": ["health", "utilities"],
+    "icons": [
+        {
+            "src": "icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

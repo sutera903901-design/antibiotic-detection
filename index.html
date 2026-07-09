@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1a237e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="牛奶抗生素检测">
+    <meta name="description" content="牛奶中β-内酰胺类抗生素残留快速检测工具，通过比色试纸拍照识别抗生素种类和浓度。">
+    <meta name="format-detection" content="telephone=no">
+
+    <title>牛奶抗生素检测</title>
+
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Preload key resources -->
+    <link rel="preload" href="css/style.css" as="style">
+</head>
+<body>
+    <!-- ===== 区块1: 顶部导航栏 ===== -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-logo">
+                <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4"/>
+                    <circle cx="12" cy="12" r="10"/>
+                </svg>
+                <h1 class="header-title">牛奶抗生素检测</h1>
+            </div>
+            <span class="header-badge">β-内酰胺类</span>
+        </div>
+    </header>
+
+    <!-- ===== 主内容区 ===== -->
+    <main class="main-content">
+        <!-- 区块2: 图像捕获区 -->
+        <section class="capture-section" id="captureSection">
+            <div class="capture-card" id="captureCard">
+                <div class="capture-placeholder" id="capturePlaceholder">
+                    <div class="placeholder-icon">
+                        <svg viewBox="0 0 80 80" fill="none">
+                            <rect x="14" y="20" width="52" height="42" rx="6" stroke="#1565c0" stroke-width="2.5" fill="none"/>
+                            <circle cx="40" cy="40" r="12" stroke="#1565c0" stroke-width="2.5" fill="none"/>
+                            <circle cx="40" cy="40" r="5" fill="#42a5f5" opacity="0.6"/>
+                            <path d="M14 30h52" stroke="#1565c0" stroke-width="1.5" opacity="0.5"/>
+                        </svg>
+                    </div>
+                    <p class="placeholder-text">点击拍照或选择图片</p>
+                    <p class="placeholder-sub">将比色试纸置于取景框内拍摄</p>
+                </div>
+                <div class="capture-preview" id="capturePreview" style="display:none;">
+                    <img id="capturedImage" alt="试纸图片" onerror="this.style.display='none'">
+                    <canvas id="detectionCanvas"></canvas>
+                    <div class="capture-grid-overlay"></div>
+                </div>
+                <!-- 选取提示浮层 -->
+                <div class="select-hint" id="selectHint" style="display:none;">
+                    <div class="hint-pulse"></div>
+                    <span>请点击试纸检测区域</span>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="capture-actions" id="captureActions">
+                <button class="btn btn-primary" id="btnCapture">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    <span>拍照</span>
+                </button>
+                <button class="btn btn-secondary" id="btnGallery">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    <span>相册</span>
+                </button>
+                <input type="file" id="fileInput" accept="image/*" capture="environment" hidden>
+                <video id="cameraVideo" autoplay playsinline style="display:none;"></video>
+            </div>
+        </section>
+
+        <!-- 区块3: 检测结果区 -->
+        <section class="result-section" id="resultSection" style="display:none;">
+            <div class="result-card" id="resultCard">
+                <!-- 匹配结果 -->
+                <div class="result-header" id="resultMatch">
+                    <div class="result-status result-status-success" id="resultStatusGood">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        <span>检测完成</span>
+                    </div>
+                    <div class="result-status result-status-warn" id="resultStatusWarn" style="display:none;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        <span>未匹配到结果</span>
+                    </div>
+                </div>
+
+                <!-- 抗生素名称 -->
+                <div class="result-name" id="resultName">--</div>
+                <div class="result-confidence" id="resultConfidence"></div>
+
+                <!-- 浓度信息 -->
+                <div class="result-info-grid">
+                    <div class="info-item">
+                        <span class="info-label">检测浓度</span>
+                        <span class="info-value" id="resultConcentration">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">安全阈值</span>
+                        <span class="info-value" id="resultThreshold">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">判断结果</span>
+                        <span class="info-value" id="resultVerdict">--</span>
+                    </div>
+                </div>
+
+                <!-- 颜色对比条 -->
+                <div class="color-compare">
+                    <div class="color-compare-label">颜色对比</div>
+                    <div class="color-compare-bar">
+                        <div class="color-swatch" id="detectedSwatch">
+                            <span class="swatch-label">检测色</span>
+                        </div>
+                        <div class="color-compare-arrow">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                                <polyline points="12 5 19 12 12 19"/>
+                            </svg>
+                        </div>
+                        <div class="color-swatch" id="referenceSwatch">
+                            <span class="swatch-label">参考色</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部操作栏 -->
+            <div class="result-actions">
+                <button class="btn btn-outline" id="btnRetake">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+                    </svg>
+                    <span>重新检测</span>
+                </button>
+                <button class="btn btn-primary" id="btnSave">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                    </svg>
+                    <span>保存结果</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast" style="display:none;">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- JavaScript 模块 -->
+    <script src="js/antibiotic-db.js"></script>
+    <script src="js/color-analyzer.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- Service Worker 注册 -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('sw.js').then(function(reg) {
+                    console.log('SW registered:', reg.scope);
+                }).catch(function(err) {
+                    console.log('SW registration failed:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
